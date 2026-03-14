@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reground-v5';
+const CACHE_NAME = 'reground-v6';
 const ASSETS = [
   './',
   './index.html',

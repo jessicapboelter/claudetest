@@ -115,6 +115,21 @@
     lastMouse = { x: e.clientX, y: e.clientY };
   });
 
+  function requestMotion() {
+    return new Promise((resolve) => {
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then((perm) => resolve(perm === 'granted'))
+          .catch(() => resolve(false));
+      } else if ('DeviceMotionEvent' in window) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+  }
+
   function startShakeGame() {
     const card = document.getElementById('game-shake-card');
     card.classList.remove('hidden');
@@ -122,18 +137,17 @@
     resizeCanvas();
     spawnBalls();
     shakeActive = true;
-    document.getElementById('shake-instruction').textContent =
-      'shake your phone to fling the balls off the screen!';
 
-    // Request motion permission (iOS 13+)
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-      DeviceMotionEvent.requestPermission().then((perm) => {
-        if (perm === 'granted') window.addEventListener('devicemotion', onShake);
-      });
-    } else {
-      window.addEventListener('devicemotion', onShake);
-    }
+    requestMotion().then((granted) => {
+      if (granted) {
+        window.addEventListener('devicemotion', onShake);
+        document.getElementById('shake-instruction').textContent =
+          'shake your phone to fling the balls off the screen!';
+      } else {
+        document.getElementById('shake-instruction').textContent =
+          'swipe the balls off the screen with your finger!';
+      }
+    });
 
     cancelAnimationFrame(animId);
     update();
@@ -264,15 +278,29 @@
 
   recordEl.textContent = `record: ${record.toFixed(1)}s`;
 
+  // Track baseline so we detect change from initial position, not absolute values
+  let baselineAccel = null;
+
   function onMotion(e) {
     if (!holding) return;
-    const a = e.accelerationIncludingGravity || e.acceleration;
-    if (!a) return;
-    // Subtract gravity (~9.8) from y, check total deviation
-    const ax = Math.abs(a.x || 0);
-    const ay = Math.abs((a.y || 0) - 9.8);
-    const az = Math.abs((a.z || 0));
-    const total = ax + ay + az;
+    const a = e.accelerationIncludingGravity;
+    if (!a || (a.x === null && a.y === null && a.z === null)) return;
+    const ax = a.x || 0, ay = a.y || 0, az = a.z || 0;
+
+    if (!baselineAccel) {
+      baselineAccel = { x: ax, y: ay, z: az };
+      return;
+    }
+
+    const dx = Math.abs(ax - baselineAccel.x);
+    const dy = Math.abs(ay - baselineAccel.y);
+    const dz = Math.abs(az - baselineAccel.z);
+    const total = dx + dy + dz;
+
+    // Slowly adapt baseline to avoid drift
+    baselineAccel.x += (ax - baselineAccel.x) * 0.02;
+    baselineAccel.y += (ay - baselineAccel.y) * 0.02;
+    baselineAccel.z += (az - baselineAccel.z) * 0.02;
 
     if (total > THRESHOLD * 3) {
       failHold();
@@ -308,22 +336,40 @@
     if (typeof addXP === 'function') addXP(isRecord ? 25 : 15);
   }
 
+  function requestMotionHold() {
+    return new Promise((resolve) => {
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then((perm) => resolve(perm === 'granted'))
+          .catch(() => resolve(false));
+      } else if ('DeviceMotionEvent' in window) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+  }
+
   function startHold() {
     holding = true;
     holdStart = Date.now();
+    baselineAccel = null;
     timeEl.textContent = '0.0s';
     circle.className = 'hold-circle holding';
     statusEl.textContent = 'stay still...';
     startBtn.classList.add('hidden');
 
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-      DeviceMotionEvent.requestPermission().then((perm) => {
-        if (perm === 'granted') window.addEventListener('devicemotion', onMotion);
-      });
-    } else {
-      window.addEventListener('devicemotion', onMotion);
-    }
+    requestMotionHold().then((granted) => {
+      if (granted) {
+        window.addEventListener('devicemotion', onMotion);
+        document.getElementById('hold-instruction').textContent =
+          'hold your phone perfectly still for as long as you can. breathe slowly.';
+      } else {
+        document.getElementById('hold-instruction').textContent =
+          'motion sensors not available on this device. try on your phone!';
+      }
+    });
 
     tickHold();
 
