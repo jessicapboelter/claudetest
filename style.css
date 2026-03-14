@@ -1026,6 +1026,158 @@ body.mood-restless .mood-banner { border-left-color: var(--orange); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
 
+/* === Games Section === */
+.games-section { margin-top: 20px; }
+
+.games-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.game-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px 14px;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  color: var(--text);
+  font-family: var(--font);
+  text-align: center;
+}
+
+.game-card-btn:active {
+  transform: scale(0.93);
+  border-color: var(--accent);
+}
+
+.game-icon { font-size: 30px; }
+.game-name { font-size: 13px; font-weight: 700; text-transform: lowercase; }
+.game-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+
+.game-fullcard {
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  text-align: center;
+}
+
+.game-instruction {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.game-status {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent2);
+  margin-top: 10px;
+}
+
+#shake-canvas, #pop-canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--bg2);
+  max-width: 100%;
+  touch-action: none;
+}
+
+/* Tap Frenzy */
+.tap-zone {
+  width: 200px;
+  height: 200px;
+  margin: 10px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+  border: 3px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.05s, background 0.1s;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.tap-zone:active {
+  transform: scale(0.95);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.4), rgba(168, 85, 247, 0.1));
+}
+
+.tap-zone.active-game {
+  border-color: var(--green);
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.15), rgba(52, 211, 153, 0.03));
+}
+
+.tap-zone.finished {
+  border-color: var(--accent2);
+}
+
+.tap-count {
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tap-label {
+  font-size: 13px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.tap-stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0;
+  font-size: 13px;
+  color: var(--text3);
+  font-weight: 600;
+}
+
+/* Freeze Hold */
+.hold-circle-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.hold-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.03));
+  border: 3px solid var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.hold-circle.holding {
+  box-shadow: 0 0 40px rgba(96, 165, 250, 0.3);
+}
+
+.hold-circle.failed {
+  border-color: var(--red);
+  box-shadow: 0 0 40px rgba(248, 113, 113, 0.3);
+}
+
+.hold-time {
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
 /* === Responsive === */
 @media (max-width: 360px) {
   .mood-grid { gap: 8px; }

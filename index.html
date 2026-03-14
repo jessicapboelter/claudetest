@@ -232,6 +232,102 @@
           </div>
         </div>
 
+        <!-- GAMES SECTION -->
+        <div class="games-section">
+          <div class="section-header">
+            <h3>&#x1F3AE; games</h3>
+          </div>
+          <div class="games-grid">
+            <button class="game-card-btn" id="btn-game-shake">
+              <span class="game-icon">&#x1F4A5;</span>
+              <span class="game-name">shake it out</span>
+              <span class="game-desc">shake your phone until all balls fly off</span>
+              <span class="pu-xp">+20 xp</span>
+            </button>
+            <button class="game-card-btn" id="btn-game-tap">
+              <span class="game-icon">&#x1F44A;</span>
+              <span class="game-name">tap frenzy</span>
+              <span class="game-desc">tap as fast as you can. beat your record.</span>
+              <span class="pu-xp">+15 xp</span>
+            </button>
+            <button class="game-card-btn" id="btn-game-hold">
+              <span class="game-icon">&#x1F9CA;</span>
+              <span class="game-name">freeze hold</span>
+              <span class="game-desc">hold perfectly still. don't move your phone.</span>
+              <span class="pu-xp">+15 xp</span>
+            </button>
+            <button class="game-card-btn" id="btn-game-pop">
+              <span class="game-icon">&#x1F388;</span>
+              <span class="game-name">pop them all</span>
+              <span class="game-desc">pop the bubbles before they float away</span>
+              <span class="pu-xp">+15 xp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GAME: Shake It Out -->
+        <div class="card game-fullcard hidden" id="game-shake-card">
+          <div class="card-header">
+            <h3>&#x1F4A5; shake it out</h3>
+            <button class="icon-btn close-btn" id="btn-close-shake">&times;</button>
+          </div>
+          <p class="game-instruction" id="shake-instruction">shake your phone to fling the balls off the screen!</p>
+          <canvas id="shake-canvas" width="300" height="350"></canvas>
+          <p class="game-status" id="shake-status">balls left: 12</p>
+        </div>
+
+        <!-- GAME: Tap Frenzy -->
+        <div class="card game-fullcard hidden" id="game-tap-card">
+          <div class="card-header">
+            <h3>&#x1F44A; tap frenzy</h3>
+            <button class="icon-btn close-btn" id="btn-close-tap">&times;</button>
+          </div>
+          <p class="game-instruction" id="tap-instruction">tap the zone as fast as you can for 10 seconds!</p>
+          <div class="tap-zone" id="tap-zone">
+            <span class="tap-count" id="tap-count">0</span>
+            <span class="tap-label">taps</span>
+          </div>
+          <div class="tap-stats">
+            <span id="tap-timer">10.0s</span>
+            <span id="tap-record">record: 0</span>
+          </div>
+          <button class="btn btn-primary btn-glow" id="btn-tap-start">start!</button>
+        </div>
+
+        <!-- GAME: Freeze Hold -->
+        <div class="card game-fullcard hidden" id="game-hold-card">
+          <div class="card-header">
+            <h3>&#x1F9CA; freeze hold</h3>
+            <button class="icon-btn close-btn" id="btn-close-hold">&times;</button>
+          </div>
+          <p class="game-instruction" id="hold-instruction">hold your phone perfectly still for as long as you can. breathe slowly.</p>
+          <div class="hold-circle-container">
+            <div class="hold-circle" id="hold-circle">
+              <span class="hold-time" id="hold-time">0.0s</span>
+            </div>
+          </div>
+          <div class="tap-stats">
+            <span id="hold-status">waiting...</span>
+            <span id="hold-record">record: 0s</span>
+          </div>
+          <button class="btn btn-primary btn-glow" id="btn-hold-start">start!</button>
+        </div>
+
+        <!-- GAME: Pop Bubbles -->
+        <div class="card game-fullcard hidden" id="game-pop-card">
+          <div class="card-header">
+            <h3>&#x1F388; pop them all</h3>
+            <button class="icon-btn close-btn" id="btn-close-pop">&times;</button>
+          </div>
+          <p class="game-instruction" id="pop-instruction">tap the bubbles before they float away! 30 seconds.</p>
+          <canvas id="pop-canvas" width="300" height="380"></canvas>
+          <div class="tap-stats">
+            <span id="pop-score">score: 0</span>
+            <span id="pop-timer">30s</span>
+            <span id="pop-record">record: 0</span>
+          </div>
+        </div>
+
         <!-- Tasks Section -->
         <div class="tasks-section">
           <div class="section-header">
@@ -291,6 +387,7 @@
   <div class="modal-overlay hidden" id="modal-overlay"></div>
   <script src="lang.js"></script>
   <script src="app.js"></script>
+  <script src="games.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js');

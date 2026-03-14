@@ -1,10 +1,11 @@
-const CACHE_NAME = 'reground-v3';
+const CACHE_NAME = 'reground-v4';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './lang.js',
   './app.js',
+  './games.js',
   './manifest.json',
 ];
 
