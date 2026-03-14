@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0a0a1a">
+  <title>Reground</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="bg-particles"></canvas>
+  <div id="app">
+
+    <!-- SCREEN: Vibe Check -->
+    <section id="screen-mood" class="screen active">
+      <div class="screen-content">
+        <div class="vibe-header">
+          <div class="xp-bar-mini">
+            <span id="level-badge-mini">lv <span id="level-num-mini">1</span></span>
+            <div class="xp-track-mini"><div class="xp-fill-mini" id="xp-fill-mini"></div></div>
+            <span class="xp-text-mini" id="xp-text-mini">0 xp</span>
+          </div>
+          <div class="streak-mini" id="streak-mini"></div>
+          <button class="lang-toggle" id="btn-lang">PT</button>
+        </div>
+        <h1 class="greeting" id="greeting-text">yo, vibe check</h1>
+        <p class="subtitle">how's your nervous system doing rn?</p>
+        <div class="mood-grid">
+          <button class="mood-btn" data-mood="calm">
+            <span class="mood-emoji">&#x1F33F;</span>
+            <span class="mood-label">chill</span>
+          </button>
+          <button class="mood-btn" data-mood="anxious">
+            <span class="mood-emoji">&#x1F4A8;</span>
+            <span class="mood-label">anxious</span>
+          </button>
+          <button class="mood-btn" data-mood="nervous">
+            <span class="mood-emoji">&#x26A1;</span>
+            <span class="mood-label">wired</span>
+          </button>
+          <button class="mood-btn" data-mood="bored">
+            <span class="mood-emoji">&#x1F611;</span>
+            <span class="mood-label">meh</span>
+          </button>
+          <button class="mood-btn" data-mood="overwhelmed">
+            <span class="mood-emoji">&#x1F30A;</span>
+            <span class="mood-label">drowning</span>
+          </button>
+          <button class="mood-btn" data-mood="restless">
+            <span class="mood-emoji">&#x1F525;</span>
+            <span class="mood-label">restless</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: Dashboard -->
+    <section id="screen-dashboard" class="screen">
+      <div class="screen-content">
+
+        <!-- XP / Level Bar -->
+        <div class="xp-bar-container">
+          <div class="xp-header">
+            <span class="level-badge" id="level-badge">Level <span id="level-num">1</span></span>
+            <span class="streak-badge" id="streak-badge"></span>
+          </div>
+          <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+          <div class="xp-footer">
+            <span class="xp-text" id="xp-text">0 / 100 XP</span>
+            <span class="xp-title" id="xp-title">Phone Zombie</span>
+          </div>
+        </div>
+
+        <!-- Mood banner -->
+        <div class="mood-banner" id="mood-banner">
+          <div class="mood-banner-left">
+            <span class="mood-banner-emoji" id="current-mood-emoji">&#x1F33F;</span>
+            <div>
+              <span class="mood-banner-mood" id="current-mood-text">chill</span>
+              <span class="mood-banner-hint" id="mood-suggestion-text"></span>
+            </div>
+          </div>
+          <button class="mood-change-btn" id="btn-change-mood">switch</button>
+        </div>
+
+        <!-- XP Toast (hidden, shows on XP gain) -->
+        <div class="xp-toast hidden" id="xp-toast">+10 XP</div>
+
+        <!-- Screen Time Tracker -->
+        <div class="card screen-time-card" id="screen-time-card">
+          <div class="card-header">
+            <h3>&#x23F1; screen sesh</h3>
+            <span class="badge" id="session-badge">vibing</span>
+          </div>
+          <div class="timer-display">
+            <span id="timer-value">00:00</span>
+          </div>
+          <p class="timer-hint" id="timer-hint">timer's running, no judgment</p>
+          <div class="timer-actions">
+            <button class="btn btn-sm btn-glow" id="btn-reset-timer">reset</button>
+            <button class="btn btn-sm btn-outline" id="btn-log-scroll">&#x1F4F1; caught scrolling</button>
+          </div>
+        </div>
+
+        <!-- Suggestion Card -->
+        <div class="card suggestion-card hidden" id="suggestion-card">
+          <div class="card-header">
+            <h3>&#x1F4AC; hey bestie</h3>
+            <button class="icon-btn close-btn" id="btn-dismiss-suggestion">&times;</button>
+          </div>
+          <p id="suggestion-text"></p>
+          <div class="suggestion-actions">
+            <button class="btn btn-primary btn-glow" id="btn-accept-suggestion">let's go!</button>
+            <button class="btn btn-outline" id="btn-skip-suggestion">nah</button>
+          </div>
+        </div>
+
+        <!-- Grounding Exercise -->
+        <div class="card grounding-card hidden" id="grounding-card">
+          <div class="card-header">
+            <h3 id="grounding-title">breathing time</h3>
+            <button class="icon-btn close-btn" id="btn-close-grounding">&times;</button>
+          </div>
+          <div class="breathing-circle-container">
+            <div class="breathing-circle" id="breathing-circle">
+              <span id="breathing-text">breathe in</span>
+            </div>
+          </div>
+          <p class="grounding-instruction" id="grounding-instruction"></p>
+        </div>
+
+        <!-- Quick Actions (fun grid) -->
+        <div class="power-ups-label">&#x1F3AE; power-ups</div>
+        <div class="power-ups-grid">
+          <button class="power-up" id="btn-breath-game">
+            <span class="pu-icon">&#x1FAC1;</span>
+            <span class="pu-label">breath game</span>
+            <span class="pu-xp">+15 xp</span>
+          </button>
+          <button class="power-up" id="btn-move">
+            <span class="pu-icon">&#x1F3CB;&#xFE0F;</span>
+            <span class="pu-label">body quest</span>
+            <span class="pu-xp">+20 xp</span>
+          </button>
+          <button class="power-up" id="btn-breathe">
+            <span class="pu-icon">&#x1F4A8;</span>
+            <span class="pu-label">breathe</span>
+            <span class="pu-xp">+10 xp</span>
+          </button>
+          <button class="power-up" id="btn-ground">
+            <span class="pu-icon">&#x1F33F;</span>
+            <span class="pu-label">ground</span>
+            <span class="pu-xp">+10 xp</span>
+          </button>
+          <button class="power-up" id="btn-get-task">
+            <span class="pu-icon">&#x1F3AF;</span>
+            <span class="pu-label">random quest</span>
+            <span class="pu-xp">+25 xp</span>
+          </button>
+          <button class="power-up" id="btn-spin-wheel">
+            <span class="pu-icon">&#x1F3B0;</span>
+            <span class="pu-label">surprise me</span>
+            <span class="pu-xp">??? xp</span>
+          </button>
+        </div>
+
+        <!-- Breath Game Card -->
+        <div class="card breath-game-card hidden" id="breath-game-card">
+          <div class="card-header">
+            <h3 id="breath-game-title">&#x1FAC1; breath calibration</h3>
+            <button class="icon-btn close-btn" id="btn-close-breath-game">&times;</button>
+          </div>
+          <p class="breath-game-subtitle" id="breath-game-subtitle">
+            hold the blob while you breathe in. let go when you breathe out. 5 rounds, your pace.
+          </p>
+          <div class="breath-game-progress" id="breath-game-progress">
+            <span class="progress-dot" data-round="1"></span>
+            <span class="progress-dot" data-round="2"></span>
+            <span class="progress-dot" data-round="3"></span>
+            <span class="progress-dot" data-round="4"></span>
+            <span class="progress-dot" data-round="5"></span>
+          </div>
+          <div class="breath-game-area">
+            <div class="breath-game-circle" id="breath-game-circle">
+              <span class="breath-game-label" id="breath-game-label">hold me</span>
+            </div>
+          </div>
+          <p class="breath-game-counter" id="breath-game-counter">round 1 / 5</p>
+        </div>
+
+        <!-- Guided Breath Card -->
+        <div class="card breath-guided-card hidden" id="breath-guided-card">
+          <div class="card-header">
+            <h3>&#x2728; your breathing</h3>
+            <button class="icon-btn close-btn" id="btn-close-guided-breath">&times;</button>
+          </div>
+          <p class="breath-game-subtitle" id="guided-breath-subtitle">
+            tuned to YOUR rhythm. follow the blob.
+          </p>
+          <div class="breath-game-area">
+            <div class="breath-guided-circle" id="breath-guided-circle">
+              <span class="breath-game-label" id="guided-breath-label">ready...</span>
+            </div>
+          </div>
+          <div class="guided-breath-stats" id="guided-breath-stats"></div>
+          <div class="guided-breath-actions">
+            <button class="btn btn-sm btn-glow" id="btn-recalibrate">redo</button>
+            <button class="btn btn-sm btn-outline" id="btn-extend-breath">slower (+1s)</button>
+          </div>
+        </div>
+
+        <!-- Physical Exercises Card -->
+        <div class="card physical-card hidden" id="physical-card">
+          <div class="card-header">
+            <h3>&#x1F4AA; body quest</h3>
+            <button class="icon-btn close-btn" id="btn-close-physical">&times;</button>
+          </div>
+          <div class="physical-exercise" id="physical-exercise">
+            <div class="physical-emoji" id="physical-emoji"></div>
+            <h4 id="physical-name"></h4>
+            <p id="physical-desc"></p>
+            <div class="physical-steps" id="physical-steps"></div>
+          </div>
+          <div class="physical-actions">
+            <button class="btn btn-sm btn-glow" id="btn-complete-exercise">done! claim xp</button>
+            <button class="btn btn-sm btn-outline" id="btn-next-exercise">nah, next one</button>
+          </div>
+        </div>
+
+        <!-- Tasks Section -->
+        <div class="tasks-section">
+          <div class="section-header">
+            <h3>&#x1F4CB; quests</h3>
+            <button class="btn btn-sm btn-primary" id="btn-add-task">+ new quest</button>
+          </div>
+          <div id="tasks-list" class="tasks-list">
+            <p class="empty-state" id="empty-tasks">no quests yet. add stuff you wanna get done and earn xp!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: Add Task -->
+    <section id="screen-add-task" class="screen">
+      <div class="screen-content">
+        <div class="screen-header">
+          <button class="icon-btn" id="btn-back-from-task">&larr;</button>
+          <h2>&#x1F4CB; new quest</h2>
+        </div>
+        <form id="task-form">
+          <div class="form-group">
+            <label for="task-name">what's the mission?</label>
+            <input type="text" id="task-name" placeholder="e.g. reply to emails, go for a walk..." required>
+          </div>
+          <div class="form-group">
+            <label>energy cost</label>
+            <div class="energy-picker">
+              <button type="button" class="energy-btn active" data-energy="low">
+                &#x1F331; low
+              </button>
+              <button type="button" class="energy-btn" data-energy="medium">
+                &#x2600;&#xFE0F; medium
+              </button>
+              <button type="button" class="energy-btn" data-energy="high">
+                &#x1F525; high
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>category</label>
+            <div class="category-picker">
+              <button type="button" class="category-btn active" data-category="work">work</button>
+              <button type="button" class="category-btn" data-category="personal">personal</button>
+              <button type="button" class="category-btn" data-category="health">health</button>
+              <button type="button" class="category-btn" data-category="creative">creative</button>
+              <button type="button" class="category-btn" data-category="social">social</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full btn-glow">add quest &#x2694;&#xFE0F;</button>
+        </form>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-overlay"></div>
+  <script src="lang.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
