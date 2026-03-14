@@ -14,6 +14,10 @@ const state = {
   lastNudgeTime: 0,
   breathingInterval: null,
   nudgeDismissed: false,
+  // Persistent daily screen time (ms)
+  dailyScreenTime: 0,
+  dailyDate: '',
+  lastVisibleTime: Date.now(),
 };
 
 function save() {
@@ -283,24 +287,129 @@ function setMood(mood) {
 $('#btn-change-mood').addEventListener('click', () => showScreen('mood'));
 
 // ============================================================
-// === TIMER ===
+// === PERSISTENT SCREEN TIME ===
 // ============================================================
+const BREAK_THRESHOLD = 15 * 60000; // 15 min away = reset session
+const IDEAL_SESSION = 30 * 60000;   // 30 min ideal max session
+const DAILY_GREEN = 60 * 60000;     // <1h = green
+const DAILY_YELLOW = 120 * 60000;   // 1-2h = yellow
+// >2h = red
+
+function initScreenTime() {
+  const today = new Date().toDateString();
+  const savedDate = localStorage.getItem('rg_st_date') || '';
+  if (savedDate === today) {
+    state.dailyScreenTime = parseInt(localStorage.getItem('rg_st_total') || '0');
+  } else {
+    state.dailyScreenTime = 0;
+  }
+  state.dailyDate = today;
+  state.sessionStart = Date.now();
+  state.lastVisibleTime = Date.now();
+  saveScreenTime();
+}
+
+function saveScreenTime() {
+  localStorage.setItem('rg_st_date', state.dailyDate);
+  localStorage.setItem('rg_st_total', state.dailyScreenTime);
+}
+
+// Track visibility: accumulate time when visible, detect breaks
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Going away: save accumulated session time
+    const sessionElapsed = Date.now() - state.lastVisibleTime;
+    state.dailyScreenTime += sessionElapsed;
+    saveScreenTime();
+  } else {
+    // Coming back: check if it was a long break
+    const awayTime = Date.now() - state.lastVisibleTime;
+    const today = new Date().toDateString();
+
+    // New day? Reset daily total
+    if (today !== state.dailyDate) {
+      state.dailyDate = today;
+      state.dailyScreenTime = 0;
+    }
+
+    // Long break? Reset session timer (but keep daily total)
+    if (awayTime >= BREAK_THRESHOLD) {
+      state.sessionStart = Date.now();
+      state.scrollLogCount = 0;
+      state.nudgeDismissed = false;
+    }
+
+    state.lastVisibleTime = Date.now();
+    saveScreenTime();
+  }
+});
+
+function getTotalScreenTimeMs() {
+  // daily accumulated + current session
+  const currentSession = Date.now() - state.lastVisibleTime;
+  return state.dailyScreenTime + currentSession;
+}
+
+function formatTime(ms) {
+  const totalSecs = Math.floor(ms / 1000);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function updateBackgroundGradient(totalMs) {
+  const overlay = $('#bg-gradient-overlay');
+  if (!overlay) return;
+
+  let hue, sat, alpha;
+  if (totalMs < DAILY_GREEN) {
+    // Green zone
+    const p = totalMs / DAILY_GREEN;
+    hue = 150 - p * 40; // 150 (green) → 110 (yellow-green)
+    sat = 50;
+    alpha = 0.06 + p * 0.04;
+  } else if (totalMs < DAILY_YELLOW) {
+    // Yellow zone
+    const p = (totalMs - DAILY_GREEN) / (DAILY_YELLOW - DAILY_GREEN);
+    hue = 110 - p * 70; // 110 → 40 (orange)
+    sat = 55;
+    alpha = 0.10 + p * 0.06;
+  } else {
+    // Red zone
+    const p = Math.min((totalMs - DAILY_YELLOW) / DAILY_GREEN, 1);
+    hue = 40 - p * 30; // 40 (orange) → 10 (red)
+    sat = 60;
+    alpha = 0.16 + p * 0.06;
+  }
+
+  overlay.style.background =
+    `radial-gradient(ellipse at 50% 0%, hsla(${hue},${sat}%,50%,${alpha}), transparent 70%)`;
+}
+
 function updateTimer() {
-  const elapsed = Date.now() - state.sessionStart;
-  const mins = Math.floor(elapsed / 60000);
-  const secs = Math.floor((elapsed % 60000) / 1000);
-  $('#timer-value').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const sessionElapsed = Date.now() - state.sessionStart;
+  const totalMs = getTotalScreenTimeMs();
+
+  // Session timer
+  const sMins = Math.floor(sessionElapsed / 60000);
+  const sSecs = Math.floor((sessionElapsed % 60000) / 1000);
+  $('#timer-value').textContent = `${String(sMins).padStart(2, '0')}:${String(sSecs).padStart(2, '0')}`;
+
+  // Total daily time
+  $('#total-time-value').textContent = formatTime(totalMs);
 
   const card = $('#screen-time-card');
   const badge = $('#session-badge');
   const hint = $('#timer-hint');
 
-  if (elapsed >= NUDGE_THRESHOLDS.danger) {
+  if (sessionElapsed >= NUDGE_THRESHOLDS.danger) {
     card.className = 'card screen-time-card danger';
     badge.className = 'badge danger'; badge.textContent = t('badge_danger');
     hint.textContent = t('timer_hint_danger');
     maybeShowTimeNudge();
-  } else if (elapsed >= NUDGE_THRESHOLDS.warning) {
+  } else if (sessionElapsed >= NUDGE_THRESHOLDS.warning) {
     card.className = 'card screen-time-card warning';
     badge.className = 'badge warning'; badge.textContent = t('badge_warning');
     hint.textContent = t('timer_hint_warning');
@@ -310,12 +419,17 @@ function updateTimer() {
     badge.className = 'badge'; badge.textContent = t('badge_ok');
     hint.textContent = t('timer_hint_ok');
   }
+
+  // Update background gradient
+  updateBackgroundGradient(totalMs);
 }
 
+initScreenTime();
 setInterval(updateTimer, 1000);
 
 $('#btn-reset-timer').addEventListener('click', () => {
   state.sessionStart = Date.now();
+  state.lastVisibleTime = Date.now();
   state.scrollLogCount = 0;
   state.nudgeDismissed = false;
   hideSuggestion();
@@ -434,7 +548,7 @@ function stopBreathing() {
 }
 
 $('#btn-close-grounding').addEventListener('click', () => { $('#grounding-card').classList.add('hidden'); stopBreathing(); });
-$('#btn-breathe').addEventListener('click', () => startGroundingExercise('breathing'));
+$('#btn-breathe').addEventListener('click', () => openBreathGame());
 $('#btn-ground').addEventListener('click', () => startGroundingExercise(randomFrom(['5-4-3-2-1', 'cold-water', 'mindful-check', 'movement'])));
 $('#btn-get-task').addEventListener('click', () => {
   const task = findBestTask();
